@@ -1,13 +1,28 @@
 #!/usr/bin/env groovy
 
+String getKubePath()
+{
+    return "${workspace}/kube"
+}
+
 String getScriptPath()
 {
-    return "${workspace}/kube/scripts"
+    return "${getKubePath()}/scripts"
 }
 
 String getChartPath()
 {
-    return "${workspace}/kube/charts/"
+    return "${getKubePath()}/charts/"
+}
+
+String getBranchName()
+{
+    return new image().getBranchName()
+}
+
+String getStgDomain()
+{
+    return '.dev.scholarshipowl.tech'
 }
 
 /**
@@ -30,12 +45,22 @@ def setCluster(String cluster, String zone, String namespace)
 * @param String chartName
 * @param helmData
 */
-def start(String cluster, String zone, String namespace, String chartName, helmData)
+def start(String cluster, String zone, String namespace, String chartName, helmData, replaceData = null)
 {
     setCluster(cluster, zone, namespace)
 
     // Replace chart version
     sh("sed -i.bak 's#version: [0-9]*#version: ${env.BUILD_NUMBER}#' ${getChartPath() + chartName}/Chart.yaml")
+
+    if(replaceData != null) {
+        for (e in replaceData) {
+            if("${e.key}" == 'replaceChartName') {
+                if("${e.value}" == true) {
+                    sh("sed -i.bak 's#name: sowl-dev#name: ${getBranchName()}#' ${getChartPath() + chartName}/Chart.yaml")
+                }
+            }
+        }
+    }
     installOrUpdateHelmChart(getChartPath() + chartName, namespace, helmData)
     println "Waiting for pods to be up..."
 }
@@ -50,6 +75,7 @@ def installOrUpdateHelmChart(String chartPath, String namespace, vars)
 {
     String scriptName = 'helmStartUpdate'
     def helmData = prepareHelmData(vars)
+    println "HELM DATA: " + helmData
 
     downloadScripts()
     sh("sh ${getScriptPath()}/bash/${scriptName}.sh ${vars.app} ${namespace} ${chartPath} '${helmData}'")
@@ -72,11 +98,7 @@ def prepareHelmData(vars)
 {
     def helmData = '--set '
     for (e in vars) {
-        if(vars.values()[vars.size() - 1] == e.value) {
-            helmData += "${e.key}=${e.value}"
-        } else {
-            helmData += "${e.key}=${e.value},"
-        }
+        helmData += "${e.key}=${e.value},"
     }
     return helmData
 }

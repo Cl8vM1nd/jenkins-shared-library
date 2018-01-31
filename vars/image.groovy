@@ -14,9 +14,9 @@ String getVersion()
 * @param String appName
 * @param String imageName
 */
-def getImageRepo(String cluster, String appName, String imageName)
+def getImageRepo(String cluster, String appName, String imageName, String branchName = null)
 {
-    return "gcr.io/${cluster}/${appName}/${imageName}"
+    return branchName ? "gcr.io/${cluster}/${appName}/${branchName}/${imageName}" : "gcr.io/${cluster}/${appName}/${imageName}"
 }
 
 /**
@@ -24,15 +24,18 @@ def getImageRepo(String cluster, String appName, String imageName)
 * @param cluster
 * @param appName
 * @param imageName
+* @param branchName
+* @param noCache
+* @param buildPath
 * @return map
 */
-def build(String cluster, String appName, String imageName)
+def build(String cluster, String appName, String imageName, String branchName = null, boolean noCache = false, String buildPath = '.')
 {
-    String imageTagRepo = getImageRepo(cluster, appName, imageName)
+    String imageTagRepo = getImageRepo(cluster, appName, imageName, branchName)
     String imageTagNumber = getVersion()
     String imageTag = "${imageTagRepo}:${imageTagNumber}"
     println "Building ${imageName} image"
-    sh("docker build -t ${imageTag} ${workspace}")
+    noCache ? sh("cd '${workspace}' && docker build --no-cache -t '${imageTag}' '${buildPath}'") : sh("cd '${workspace}' && docker build -t '${imageTag}' '${buildPath}'")
     return [imageTagRepo: imageTagRepo, imageTagNumber: getVersion(), imageTag: imageTag]
 }
 
@@ -44,6 +47,28 @@ def push(String imageTag)
 {
     println "Pushing image ${imageTag}"
     sh("gcloud docker -- push ${imageTag}")
+}
+
+/**
+* Returning correct branchName
+* @param imageTag
+* @return String
+**/
+String getBranchName()
+{
+    String branchName = BRANCH_NAME
+    // Shorten the name of the branch if biggger then 30 symbols
+    if (branchName.length() > 30) {
+        branchName = branchName.take(30)
+    }
+    return branchName
+           .replace('feature', '')
+           .replace('hotfix', '')
+           .replace('release', '')
+           .replace('+', '')
+           .replace('_', '-')
+           .replace('/', '')
+           .toLowerCase()
 }
 
 return this

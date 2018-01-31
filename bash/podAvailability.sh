@@ -13,7 +13,7 @@ desired=$(kubectl get deployments ${deploymentName} | tail -n 1 | awk {'print $2
 
 if [ "$current" != "$desired" ]; then
   # Get failed pod
-  pod=$(kubectl get pods | grep "^${deploymentName}-[0-9a-zA-Z-]*[ 0-9/]*[^Running]*[0-9a-z ]*\$" | awk {'print $1'})
+  pod=$(kubectl get pods | grep -i "^${deploymentName}-[0-9a-zA-Z-]*[ 0-9/]*[^Running]*[0-9a-z ]*\$" | awk {'print $1'})
   if [ ! -z "$pod" ]; then
    kubectl logs ${pod} -c php-fpm | head -n 20
   fi

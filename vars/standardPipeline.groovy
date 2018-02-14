@@ -25,6 +25,13 @@ def call(body)
 
             stage('Build Docker images \u2756') {
                 ansiColor {
+                    // Set flag if production
+                    if(BRANCH_NAME == 'master') {
+                        println "PRODUCTION build"
+                        sh("export PRODUCTION=true")
+                    } else {
+                        println "DEVELOP build"
+                    }
                     finalImage = image.build(
                         config.cluster,
                         config.appName,
@@ -48,7 +55,7 @@ def call(body)
                                   'containers.phpfpm.tag': finalImage.imageTagNumber,
                                   'containers.phpfpm.repository': finalImage.imageTagRepo]
                             )
-                            sh("sleep ${config.waitTime}");
+                            sh("sleep ${config.waitTime}")
                             deploy.checkPodsAlive(config.appName)
                         }
                     }

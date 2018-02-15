@@ -29,13 +29,6 @@ def call(body)
 
             stage('Build Docker images \u2756') {
                 ansiColor {
-                    // Set flag if production
-                    if(BRANCH_NAME == 'master') {
-                        println "PRODUCTION build"
-                        sh("export PRODUCTION=true")
-                    } else {
-                        println "DEVELOP build"
-                    }
                     finalImage = image.build(
                         config.cluster,
                         config.appName,

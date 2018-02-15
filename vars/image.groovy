@@ -35,7 +35,16 @@ def build(String cluster, String appName, String imageName, String branchName = 
     String imageTagNumber = getVersion()
     String imageTag = "${imageTagRepo}:${imageTagNumber}"
     println "Building ${imageName} image"
-    noCache ? sh("cd '${workspace}' && docker build --no-cache -t '${imageTag}' '${buildPath}'") : sh("cd '${workspace}' && docker build -t '${imageTag}' '${buildPath}'")
+    String BUILD = 'production'
+    // Set flag if production
+    if(BRANCH_NAME == 'master') {
+        println "PRODUCTION build"
+        BUILD = 'production'
+    } else {
+        println "STAGING build"
+        BUILD = 'staging'
+    }
+    noCache ? sh("cd '${workspace}' && docker build --build-arg BUILD='${BUILD}' --no-cache -t '${imageTag}' '${buildPath}'") : sh("cd '${workspace}' && docker build --build-arg BUILD='${BUILD}' -t '${imageTag}' '${buildPath}'")
     return [imageTagRepo: imageTagRepo, imageTagNumber: getVersion(), imageTag: imageTag]
 }
 

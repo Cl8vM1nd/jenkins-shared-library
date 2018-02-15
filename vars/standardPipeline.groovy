@@ -12,12 +12,16 @@ def call(body)
     String phpImageName = 'php-fpm'
     def image           = new image()
     def deploy          = new deploy()
+    def slack           = new slack()
 
     node(config.node) {
         // Do not run parallel builds. Wait until first finish
         properties([disableConcurrentBuilds()])
 
         try {
+            if(config.slack) {
+                slack.send(config.slackChannel, 'STARTED', config.slackMsg, config.slackSuccessProdMsg, config.slackSuccessDevMsg, config.slackFailedMsg)
+            }
             stage('Prepare \u2776') {
                 checkout scm
                 sh('gcloud docker -a')
@@ -60,8 +64,14 @@ def call(body)
                         }
                     }
                 }
+                if(config.slack) {
+                    slack.send(config.slackChannel, 'SUCCESS', config.slackMsg, config.slackSuccessProdMsg, config.slackSuccessDevMsg, config.slackFailedMsg)
+                }
             }
         } catch (err) {
+            if(config.slack) {
+                slack.send(config.slackChannel, 'FAILED', config.slackMsg, config.slackSuccessProdMsg, config.slackSuccessDevMsg, config.slackFailedMsg)
+            }
             currentBuild.result = 'FAILED'
             throw err
         }

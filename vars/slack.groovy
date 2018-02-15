@@ -1,20 +1,31 @@
 #!/usr/bin/env groovy
 
-def call(body) 
+/**
+* Send mesasge through slack
+* @param String channel
+* @param String buildStatus
+* @param String msg
+* @param String successProdMsg
+* @param String successDevMsg
+* @param String failedMsg
+*/
+def send(
+    String channel          = '#development', 
+    String buildStatus      = 'STARTED', 
+    String msg              = 'Build started.', 
+    String successProdMsg   = 'Success production build.', 
+    String successDevMsg    = 'Success develop build.', 
+    String failedMsg        = 'Failed build.') 
 {
     // Build status of null means success.
     buildStatus = buildStatus ?: 'SUCCESS'
 
     def color
-    def job_name = BRANCH_NAME.replace("%2F", "_")
-    def msg = "${buildStatus}: `${job_name}`"
-    def domainIp = "http://${ip}".replace("\n", "")
 
     if (buildStatus == 'STARTED') {
         color = '#D4DADF'
     } else if (buildStatus == 'SUCCESS') {
         color = '#69ff77'
-        msg = "Deployed `${job_name}`"
     } else if (buildStatus == 'UNSTABLE') {
         color = '#FFFE89'
     } else {
@@ -22,10 +33,16 @@ def call(body)
     }
 
     if (buildStatus == 'FAILED' || buildStatus == 'UNSTABLE') {
-      slackSend(color: color, channel: '#development', message: ":docker-down:  ${msg}\n${env.BUILD_URL}")
+      slackSend(color: color, channel: channel, message: failedMsg)
     } else if (buildStatus == 'SUCCESS') {
-      slackSend(color: color, channel: '#development', message: ":docker: Dear Sowlcom-Team \n${msg} to\n ${domainIp} or ${url}\nHappy Testing!")
+        if(BRANCH_NAME == 'master') {
+            slackSend(color: color, channel: channel, message: successProdMsg)
+        } else {
+            slackSend(color: color, channel: channel, message: successDevMsg)
+        }
     } else {
-      slackSend(color: color, channel: '#development', message: ":docker: ${msg}")
+      slackSend(color: color, channel: channel, message: msg)
     }
 }
+
+return this

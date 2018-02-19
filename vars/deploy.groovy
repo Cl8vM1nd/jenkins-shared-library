@@ -108,7 +108,7 @@ def prepareHelmData(vars)
 */
 def downloadScripts()
 {
-    def branch = 'develop'
+    def branch = 'master'
     sh("mkdir -p ${getScriptPath()}")
     dir("${getScriptPath()}") {
         // Get bash scripts

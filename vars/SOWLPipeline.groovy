@@ -68,8 +68,8 @@ def call(body)
                     withCredentials([file(credentialsId: "${config.service_account_key_id}", variable: 'SERVICE_ACCOUNT_KEY')]) {
                         sh("gcloud auth activate-service-account ${config.serviceAccount} --key-file ${SERVICE_ACCOUNT_KEY} --project ${config.project}")
                         withEnv(["GOOGLE_APPLICATION_CREDENTIALS=${SERVICE_ACCOUNT_KEY}"]) {
-                            image.push(phpImage.imageTag)
-                            image.push(mysqlImage.imageTag)
+                            image.push(phpImage.tag)
+                            image.push(mysqlImage.tag)
                             //if(${params.userFlag})
                             deploy.start(
                                 config.cluster,
@@ -77,10 +77,10 @@ def call(body)
                                 config.namespace,
                                 config.chartName,
                                 [ 'app': image.getBranchName(),
-                                  'containers.phpfpm.tag': phpImage.imageTagNumber,
-                                  'containers.phpfpm.repository': phpImage.imageTagRepo,
-                                  'mysql.image': mysqlImage.imageTagRepo,
-                                  'mysql.imageTag': mysqlImage.imageTagNumber
+                                  'containers.phpfpm.tag': phpImage.tagNumber,
+                                  'containers.phpfpm.repository': phpImage.tagRepo,
+                                  'mysql.image': mysqlImage.tagRepo,
+                                  'mysql.imageTag': mysqlImage.tagNumber
                                 ],
                                 [ 'replaceChartName': true]
                             )

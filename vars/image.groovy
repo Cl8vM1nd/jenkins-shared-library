@@ -45,7 +45,7 @@ def build(String cluster, String appName, String imageName, String branchName = 
         BUILD = 'staging'
     }
     noCache ? sh("cd '${workspace}' && docker build --build-arg BUILD='${BUILD}' --no-cache -t '${imageTag}' '${buildPath}'") : sh("cd '${workspace}' && docker build --build-arg BUILD='${BUILD}' -t '${imageTag}' '${buildPath}'")
-    return [imageTagRepo: imageTagRepo, imageTagNumber: getVersion(), imageTag: imageTag]
+    return [tagRepo: imageTagRepo, tagNumber: getVersion(), tag: imageTag]
 }
 
 /**

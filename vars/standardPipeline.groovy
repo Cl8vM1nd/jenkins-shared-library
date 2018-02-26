@@ -1,4 +1,7 @@
 #!/usr/bin/env groovy
+/**
+* One Image standart Pipeline
+*/
 
 def call(body) 
 {
@@ -8,8 +11,7 @@ def call(body)
     body.delegate = config
     body()
 
-    def finalImage      = null
-    String phpImageName = 'php-fpm'
+    def buildImage      = null
     def image           = new image()
     def deploy          = new deploy()
     def slack           = new slack()
@@ -29,10 +31,10 @@ def call(body)
 
             stage('Build Docker images \u2756') {
                 ansiColor {
-                    finalImage = image.build(
+                    buildImage = image.build(
                         config.cluster,
                         config.appName,
-                        phpImageName
+                        config.imageName
                     )
                 }
             }
@@ -42,17 +44,10 @@ def call(body)
                     withCredentials([file(credentialsId: "${config.service_account_key_id}", variable: 'SERVICE_ACCOUNT_KEY')]) {
                         sh("gcloud auth activate-service-account ${config.serviceAccount} --key-file ${SERVICE_ACCOUNT_KEY} --project ${config.project}")
                         withEnv(["GOOGLE_APPLICATION_CREDENTIALS=${SERVICE_ACCOUNT_KEY}"]) {
-                            image.push(finalImage.imageTag)
-                            deploy.start(
-                                config.cluster,
-                                config.zone,
-                                config.namespace,
-                                config.chartName,
-                                [ app: config.appName,
-                                  'containers.phpfpm.tag': finalImage.imageTagNumber,
-                                  'containers.phpfpm.repository': finalImage.imageTagRepo]
-                            )
-                            sh("sleep ${config.waitTime}")
+                            image.push(buildImage.tag)
+                            def helm = deploy.setHelmParams(config.helmParams, buildImage, ['serviceAccountKey' : "${SERVICE_ACCOUNT_KEY}"])
+                            deploy.start(config, helm)
+                            sh("sleep ${config.waitTime}");
                             deploy.checkPodsAlive(config.appName)
                         }
                     }

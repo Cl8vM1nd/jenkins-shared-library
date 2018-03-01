@@ -69,8 +69,10 @@ String getBranchName()
     // Shorten the name of the branch if biggger then 30 symbols
     if (branchName.length() > 30) {
         branchName = branchName.take(30)
-        def lastCharachter =branchName[-1..-1]
-        println "LAST CHARACHTER: ${lastCharachter}"
+        def lastCharacter = branchName[-1..-1]
+        if (lastCharacter == '-' || lastCharacter == '_') {
+            branchName = branchName.subSequence(0, branchName.length() - 1)
+        }
     }
     return branchName
            .replace('feature', '')

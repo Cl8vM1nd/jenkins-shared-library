@@ -48,7 +48,7 @@ def call(body)
                             def helm = deploy.setHelmParams(config.helmParams, buildImage, ['serviceAccountKey' : "${SERVICE_ACCOUNT_KEY}"])
                             deploy.start(config, helm)
                             sh("sleep ${config.waitTime}");
-                            deploy.checkPodsAlive(config.appName)
+                            deploy.checkPodsAlive(config.chartName)
                         }
                     }
                 }

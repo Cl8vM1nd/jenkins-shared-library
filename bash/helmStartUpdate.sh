@@ -11,7 +11,7 @@ echo "Helm Initializing"
 helm init
 helm init --upgrade
 
-exist=$(kubectl get pods | grep $1)
+exist=$(helm ls | grep $1)
 if [ ! -z "$exist"  ]; then
   # Upgrade
   helm upgrade $1 $3 \
